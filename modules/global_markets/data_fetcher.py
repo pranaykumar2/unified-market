@@ -30,16 +30,20 @@ async def fetch_api_data(api_url, section_name):
         logger.info(f"📡 Fetching {section_name} from API...")
         
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
             "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
             "Referer": "https://www.moneycontrol.com/",
             "Origin": "https://www.moneycontrol.com",
-            "Connection": "keep-alive",
+            "DNT": "1",
+            "sec-ch-ua": '"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-site"
+            "Sec-Fetch-Site": "same-site",
+            "sec-gpc": "1"
         }
         
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
