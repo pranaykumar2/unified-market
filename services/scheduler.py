@@ -49,8 +49,7 @@ class UnifiedScheduler:
     
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.scheduler = AsyncIOScheduler()
-        self.scheduler.configure(timezone=IST)
+        self.scheduler = AsyncIOScheduler(timezone=IST)
         
         # --- Shared Services ---
         self.cache_manager = CacheManager() # Initialize here
