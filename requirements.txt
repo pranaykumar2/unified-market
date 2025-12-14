@@ -1,0 +1,15 @@
+python-telegram-bot==21.0
+requests==2.31.0
+beautifulsoup4==4.12.3
+pillow>=10.4.0
+python-dotenv==1.0.1
+schedule==1.2.1
+pydantic>=2.5.2
+pydantic-settings>=2.1.0
+httpx>=0.25.0
+pytz>=2024.1
+deep-translator>=1.11.0
+colorama>=0.4.6
+rich
+pyfiglet
+APScheduler==3.10.4
