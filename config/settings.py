@@ -79,10 +79,10 @@ class Settings(BaseSettings):
     FONT_BRAND_STYLE: str = 'italic'
     
     # Font Families (Defaults to Google Fonts for auto-download)
-    FONT_TAG_FAMILY: str = 'Roboto'
-    FONT_TITLE_FAMILY: str = 'Roboto'
+    FONT_TAG_FAMILY: str = 'Poppins'
+    FONT_TITLE_FAMILY: str = 'Plus Jakarta Sans'
     FONT_DESCRIPTION_FAMILY: str = 'Roboto'
-    FONT_BRAND_FAMILY: str = 'Merriweather'
+    FONT_BRAND_FAMILY: str = 'Poppins'
     
     # ============== SHARED STORAGE CONFIGURATION ==============
     DATA_DIR: str = "data"

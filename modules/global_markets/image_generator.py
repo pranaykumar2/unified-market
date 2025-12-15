@@ -1,5 +1,7 @@
 import os
 import logging
+import re
+import requests
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 from pathlib import Path
@@ -40,45 +42,159 @@ DATA_FONT_SIZE = 28         # Was 18, now +4
 FOOTER_FONT_SIZE = 16       # Was 14, now +2
 
 
+def download_google_font(font_family, style):
+    """Download Google Font from CDN and cache it locally."""
+    if not font_family:
+        return None
+    
+    # Use centralized fonts directory
+    cache_dir = Path(settings.FONTS_DIR)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Map style to Google Fonts parameters
+    if style == 'bold':
+        weight = '700'
+        italic = ''
+    elif style == 'italic':
+        weight = '400'
+        italic = 'ital,'
+    else:  # normal
+        weight = '400'
+        italic = ''
+    
+    # Check if font is already cached
+    font_filename = f"{font_family.replace(' ', '')}-{style}.ttf"
+    font_path = cache_dir / font_filename
+    
+    if font_path.exists():
+        logger.debug(f"Using cached font: {font_family} ({style})")
+        return str(font_path)
+    
+    # Download from Google Fonts CDN
+    try:
+        logger.info(f"⬇️ Downloading font: {font_family} ({style})...")
+        
+        # Request font CSS with proper User-Agent
+        font_name_encoded = font_family.replace(' ', '+')
+        
+        if italic:
+            api_url = f"https://fonts.googleapis.com/css2?family={font_name_encoded}:ital,wght@1,{weight}&display=swap"
+        else:
+            api_url = f"https://fonts.googleapis.com/css2?family={font_name_encoded}:wght@{weight}&display=swap"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        
+        response = requests.get(api_url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        # Parse CSS to find font file URL
+        font_urls = re.findall(r'src:\s*url\(([^)]+)\)', response.text)
+        
+        if font_urls:
+            font_url = font_urls[0].strip()
+            
+            font_response = requests.get(font_url, timeout=15)
+            font_response.raise_for_status()
+            
+            with open(font_path, 'wb') as f:
+                f.write(font_response.content)
+            
+            logger.info(f"✅ Font downloaded: {font_path}")
+            return str(font_path)
+        else:
+            logger.warning(f"⚠️ No font URL found in CSS for {font_family}")
+            
+    except Exception as e:
+        logger.warning(f"⚠️ Could not download Google Font {font_family} ({style}): {e}")
+    
+    return None
+
+
+def ensure_fonts_downloaded():
+    """Pre-download required fonts at startup to avoid delays during image generation."""
+    logger.info("📥 Ensuring required fonts are available...")
+    fonts_needed = [
+        ('Roboto', 'normal'),
+        ('Roboto', 'bold')
+    ]
+    
+    downloaded = 0
+    cached = 0
+    failed = 0
+    
+    for font_family, style in fonts_needed:
+        cache_dir = Path(settings.FONTS_DIR)
+        font_filename = f"{font_family.replace(' ', '')}-{style}.ttf"
+        font_path = cache_dir / font_filename
+        
+        if font_path.exists():
+            cached += 1
+        else:
+            result = download_google_font(font_family, style)
+            if result:
+                downloaded += 1
+            else:
+                failed += 1
+    
+    logger.info(f"✅ Font check complete: {cached} cached, {downloaded} downloaded, {failed} failed")
+    return True
+
+
 def get_font(size, bold=False):
-    """Get font with fallback options, checking centralized font directory first."""
+    """Get font with fallback options, with auto-download from Google Fonts."""
     font_options = []
     
     # Check centralized fonts directory first
     fonts_dir = Path(settings.FONTS_DIR)
+    fonts_dir.mkdir(parents=True, exist_ok=True)
     
-    # 1. Look for Roboto (downloaded by capital_market or manually added)
+    # 1. Try to download from Google Fonts if not already cached
+    style = 'bold' if bold else 'normal'
+    google_font_path = download_google_font('Roboto', style)
+    if google_font_path:
+        font_options.append(google_font_path)
+    
+    # 2. Look for existing Roboto fonts (downloaded by capital_market or manually added)
     if bold:
+        font_options.append(str(fonts_dir / 'Roboto-bold.ttf'))
         font_options.append(str(fonts_dir / 'Roboto-Bold.ttf'))
         font_options.append(str(fonts_dir / 'arialbd.ttf'))
     else:
+        font_options.append(str(fonts_dir / 'Roboto-normal.ttf'))
         font_options.append(str(fonts_dir / 'Roboto-Regular.ttf'))
         font_options.append(str(fonts_dir / 'arial.ttf'))
 
+    # 3. System font options as final fallback
     if bold:
-        # Bold font options (System)
         font_options.extend([
             'arialbd.ttf',  # Windows Arial Bold
             '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',  # Linux
             '/System/Library/Fonts/Helvetica.ttc',  # macOS
+            '/data/data/com.termux/files/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',  # Termux
             'DejaVuSans-Bold.ttf',
         ])
     else:
-        # Regular font options (System)
         font_options.extend([
             'arial.ttf',  # Windows Arial
             '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',  # Linux
             '/System/Library/Fonts/Helvetica.ttc',  # macOS
+            '/data/data/com.termux/files/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',  # Termux
             'DejaVuSans.ttf',
         ])
     
+    # Try each font option
     for font_path in font_options:
         try:
-            return ImageFont.truetype(font_path, size)
-        except:
+            font = ImageFont.truetype(font_path, size)
+            logger.debug(f"Loaded font: {font_path} (size: {size})")
+            return font
+        except Exception as e:
             continue
     
-    # Final fallback
+    # Final fallback - but log a warning
+    logger.warning(f"⚠️ Could not load any TrueType fonts, falling back to default font (size: {size})")
     return ImageFont.load_default()
 
 

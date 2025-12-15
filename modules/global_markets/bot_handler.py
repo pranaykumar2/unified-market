@@ -6,12 +6,18 @@ from telegram import Bot
 from telegram.error import TelegramError
 from config.settings import settings
 from .data_fetcher import fetch_all_market_data, ensure_data_directories
-from .image_generator import create_market_images
+from .image_generator import create_market_images, ensure_fonts_downloaded
 
 logger = logging.getLogger(__name__)
 
 # Create a dedicated executor for CPU-intensive image generation
 image_executor = ThreadPoolExecutor(max_workers=4)
+
+# Pre-download fonts at module initialization
+try:
+    ensure_fonts_downloaded()
+except Exception as e:
+    logger.warning(f"Could not pre-download fonts: {e}")
 
 
 async def send_global_markets_update(bot: Bot) -> bool:
