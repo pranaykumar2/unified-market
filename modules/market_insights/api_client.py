@@ -15,8 +15,19 @@ class TrendlyneAPIClient:
     def __init__(self):
         self.base_url = settings.TRENDLYNE_API_URL
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+            "Referer": "https://trendlyne.com/market-insights/?start_date=2025-12-15&end_date=2025-12-15&defaultStockgroup=All",
+            "sec-ch-ua": '"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "X-Requested-With": "XMLHttpRequest",
+            "DNT": "1"
         }
         self.timeout = 30.0 # Re-added timeout as it's used in fetch_market_insights
         
@@ -25,7 +36,7 @@ class TrendlyneAPIClient:
         """Fetch market insights from API with auto-retry."""
         params = {
             "rangeType": settings.API_RANGE_TYPE,
-            "stockInfoGroup": settings.API_STOCK_GROUP
+            "stockGroup": settings.API_STOCK_GROUP
         }
         try:
             logger.debug(f"📡 FETCHING market insights from Trendlyne API...")
@@ -35,10 +46,8 @@ class TrendlyneAPIClient:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(
                     self.base_url,
-                    headers={
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                        "Accept": "application/json",
-                    }
+                    params=params,
+                    headers=self.headers
                 )
                 
                 response.raise_for_status()
