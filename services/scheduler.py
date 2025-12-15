@@ -194,13 +194,13 @@ class UnifiedScheduler:
         if settings.ENABLE_CAPITAL_MARKET:
             self.scheduler.add_job(
                 self.job_capital_market,
-                trigger=IntervalTrigg,
-                misfire_grace_time=300,  # Allow up to 5 minutes delay
-                coalesce=True,  # If multiple instances are queued, run only once
-                max_instances=1er(minutes=self.cm_interval),
+                trigger=IntervalTrigger(minutes=self.cm_interval),
                 id='capital_market',
                 name='Capital Market News Check',
-                replace_existing=True
+                replace_existing=True,
+                misfire_grace_time=300,  # Allow up to 5 minutes delay
+                coalesce=True,  # If multiple instances are queued, run only once
+                max_instances=1
             )
             active_modules.append(f"Capital Market (every {self.cm_interval} min)")
         
