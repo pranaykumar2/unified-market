@@ -183,7 +183,10 @@ class UnifiedScheduler:
                 trigger=IntervalTrigger(minutes=self.mi_interval),
                 id='market_insights',
                 name='Market Insights Check',
-                replace_existing=True
+                replace_existing=True,
+                misfire_grace_time=300,  # Allow up to 5 minutes delay
+                coalesce=True,  # If multiple instances are queued, run only once
+                max_instances=1
             )
             active_modules.append(f"Market Insights (every {self.mi_interval} min)")
         
@@ -191,7 +194,10 @@ class UnifiedScheduler:
         if settings.ENABLE_CAPITAL_MARKET:
             self.scheduler.add_job(
                 self.job_capital_market,
-                trigger=IntervalTrigger(minutes=self.cm_interval),
+                trigger=IntervalTrigg,
+                misfire_grace_time=300,  # Allow up to 5 minutes delay
+                coalesce=True,  # If multiple instances are queued, run only once
+                max_instances=1er(minutes=self.cm_interval),
                 id='capital_market',
                 name='Capital Market News Check',
                 replace_existing=True
@@ -206,7 +212,10 @@ class UnifiedScheduler:
                 trigger=CronTrigger(hour=hour, minute=minute, timezone=IST),
                 id='global_markets',
                 name='Daily Global Markets Update',
-                replace_existing=True
+                replace_existing=True,
+                misfire_grace_time=3600,  # Allow up to 1 hour delay - job will still run
+                coalesce=True,  # If multiple instances are queued, run only once
+                max_instances=1  # Only one instance can run at a time
             )
             active_modules.append(f"Global Markets (daily at {settings.GLOBAL_MARKETS_DAILY_TIME} IST)")
         

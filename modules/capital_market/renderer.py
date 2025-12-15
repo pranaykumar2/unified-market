@@ -414,7 +414,7 @@ class EnhancedNewsImageGenerator:
                 base.paste(news_img, (int(img_x), int(img_y)), mask)
         
         # Brand
-        brand_text = "Capital Market News"
+        brand_text = ""
         brand_bbox = self.font_brand.getbbox(brand_text)
         brand_width = brand_bbox[2] - brand_bbox[0]
         brand_height = brand_bbox[3] - brand_bbox[1]
