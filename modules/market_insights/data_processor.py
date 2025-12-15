@@ -210,11 +210,15 @@ class DataProcessor:
     def _parse_news_date(self, timestamp_str: str) -> Optional[str]:
         """Parse Trendlyne timestamp format to date string (DD MMM, YYYY)"""
         try:
-            # Example: "12 Dec, 2025  3:23 PM (IST)"
-            # Extract just the date part: "12 Dec, 2025"
+            # Example: "15 Dec, 2025 11:23 AM (IST)" or "15 Dec, 2025  9:47 AM (IST)"
+            # Extract just the date part: "15 Dec, 2025"
             if timestamp_str:
-                date_part = timestamp_str.split('  ')[0].strip()  # Split by double space
-                return date_part
+                # Remove the time portion - everything after the year
+                # Split by common patterns: AM, PM, or (IST)
+                import re
+                match = re.match(r'(\d{1,2}\s+\w+,\s+\d{4})', timestamp_str)
+                if match:
+                    return match.group(1)
         except Exception as e:
             logger.debug(f"Error parsing date from '{timestamp_str}': {e}")
         return None
