@@ -20,6 +20,7 @@ def print_banner():
     # 1. Generate Graffiti Text (responsive to screen size)
     # For small screens (mobile/Termux): use compact fonts
     # For large screens (PC): use bold fonts
+    # Fonts to try: 'slant', 'graffiti', 'starwars', 'doom', 'ansi_shadow'
     if terminal_width < 80:
         # Small screen (Android/Termux) - use compact font
         title_text = pyfiglet.figlet_format("UNIFIED BOT", font="small")
